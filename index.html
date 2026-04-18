@@ -213,17 +213,6 @@
             letter-spacing: 0.02em;
         }
         .progress-head .count strong { color: var(--text); font-weight: 600; }
-        .progress-head .score {
-            color: var(--text);
-            font-weight: 600;
-        }
-        .progress-head .score em {
-            font-style: normal;
-            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
 
         .progress-bar {
             width: 100%;
@@ -260,46 +249,6 @@
             display: block;
             transition: opacity 0.25s ease;
         }
-        .image-wrap::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 22px;
-            pointer-events: none;
-            box-shadow: inset 0 0 0 0px transparent;
-            transition: box-shadow 0.2s ease;
-        }
-        .image-wrap.flash-correct::after {
-            box-shadow: inset 0 0 0 4px var(--success), 0 0 40px rgba(16, 185, 129, 0.4);
-        }
-        .image-wrap.flash-wrong::after {
-            box-shadow: inset 0 0 0 4px var(--danger), 0 0 40px rgba(239, 68, 68, 0.4);
-        }
-
-        .feedback {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 0.82em;
-            font-weight: 600;
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            background: rgba(0, 0, 0, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            opacity: 0;
-            transform: translateY(-4px);
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            pointer-events: none;
-        }
-        .feedback.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .feedback.correct { color: #6ee7b7; border-color: rgba(16, 185, 129, 0.4); }
-        .feedback.wrong { color: #fca5a5; border-color: rgba(239, 68, 68, 0.4); }
-
         .choices {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -450,12 +399,10 @@
         <div id="gameScreen" class="screen">
             <div class="progress-head">
                 <span class="count"><strong id="currentIndex">1</strong> of <span id="totalImages">24</span></span>
-                <span class="score">Score <em id="liveScore">0</em></span>
             </div>
             <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
             <div class="image-wrap" id="imageWrap">
                 <img id="currentImage" src="" alt="Face to evaluate">
-                <div class="feedback" id="feedback"></div>
             </div>
             <div class="choices">
                 <button class="choice ai" data-guess="ai" type="button">
@@ -465,7 +412,7 @@
                 </button>
                 <button class="choice real" data-guess="real" type="button">
                     <span class="icon">👤</span>
-                    <span class="label">Real Person</span>
+                    <span class="label">Real</span>
                     <span class="hint"><kbd>R</kbd></span>
                 </button>
             </div>
@@ -532,10 +479,8 @@
             currentImage: document.getElementById('currentImage'),
             currentIndex: document.getElementById('currentIndex'),
             totalImages: document.getElementById('totalImages'),
-            liveScore: document.getElementById('liveScore'),
             progressFill: document.getElementById('progressFill'),
             imageWrap: document.getElementById('imageWrap'),
-            feedback: document.getElementById('feedback'),
             finalScore: document.getElementById('finalScore'),
             finalTotal: document.getElementById('finalTotal'),
             scorePercent: document.getElementById('scorePercent'),
@@ -573,7 +518,6 @@
             answers = [];
             locked = false;
             el.totalImages.textContent = IMAGE_DATA.length;
-            el.liveScore.textContent = '0';
             el.progressFill.style.width = '0%';
             showScreen(el.gameScreen);
             renderCurrent(true);
@@ -593,8 +537,6 @@
             }
             el.currentIndex.textContent = cursor + 1;
             el.progressFill.style.width = `${(cursor / IMAGE_DATA.length) * 100}%`;
-            el.feedback.classList.remove('show', 'correct', 'wrong');
-            el.imageWrap.classList.remove('flash-correct', 'flash-wrong');
             setChoicesDisabled(false);
         }
 
@@ -611,31 +553,21 @@
             const guessedReal = guess === 'real';
             const correct = guessedReal === isReal;
 
-            if (correct) {
-                score++;
-                el.imageWrap.classList.add('flash-correct');
-                el.feedback.textContent = '✓ Correct';
-                el.feedback.classList.add('show', 'correct');
-            } else {
-                el.imageWrap.classList.add('flash-wrong');
-                el.feedback.textContent = isReal ? '✗ That was real' : '✗ That was AI';
-                el.feedback.classList.add('show', 'wrong');
-            }
-            el.liveScore.textContent = score;
+            if (correct) score++;
             setChoicesDisabled(true);
 
             answers.push({ index: imageIdx, guess, correct, isReal });
 
-            setTimeout(() => {
-                cursor++;
-                if (cursor >= IMAGE_DATA.length) {
-                    el.progressFill.style.width = '100%';
-                    finishGame();
-                } else {
+            cursor++;
+            if (cursor >= IMAGE_DATA.length) {
+                el.progressFill.style.width = '100%';
+                finishGame();
+            } else {
+                setTimeout(() => {
                     locked = false;
                     renderCurrent(false);
-                }
-            }, 900);
+                }, 180);
+            }
         }
 
         async function finishGame() {
