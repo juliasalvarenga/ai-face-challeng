@@ -368,6 +368,59 @@
             font-weight: 500;
         }
 
+        /* Reveal grid */
+        .reveal-section {
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        .reveal-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--fg-dim);
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        .reveal-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .reveal-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 4 / 5;
+            border: 1.5px solid var(--line);
+        }
+        .reveal-card img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .reveal-card .reveal-badge {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 6px 8px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-align: center;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+        .reveal-card.correct { border-color: rgba(34, 120, 60, 0.55); }
+        .reveal-card.correct .reveal-badge {
+            background: rgba(34, 120, 60, 0.82);
+            color: #fff;
+        }
+        .reveal-card.wrong { border-color: rgba(180, 40, 40, 0.5); }
+        .reveal-card.wrong .reveal-badge {
+            background: rgba(180, 40, 40, 0.82);
+            color: #fff;
+        }
+
         @media (max-width: 520px) {
             body { padding: 40px 22px; }
             .choices { grid-template-columns: 1fr; }
@@ -375,6 +428,7 @@
             .result-message { font-size: 1.15rem; padding: 24px 0; }
             .stat + .stat { padding-left: 20px; }
             .eyebrow { margin-bottom: 32px; }
+            .reveal-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
         }
     </style>
 </head>
@@ -434,7 +488,10 @@
                 <div class="stat"><div class="v" id="statWrong">0</div><div class="l">Missed</div></div>
             </div>
             <div class="result-message" id="resultMessage"></div>
-            <br>
+            <div class="reveal-section">
+                <div class="reveal-label">Reveal</div>
+                <div class="reveal-grid" id="revealGrid"></div>
+            </div>
             <button id="retryBtn" class="btn ghost" type="button">
                 <span>Try again</span>
                 <span class="arrow">&rarr;</span>
@@ -726,6 +783,23 @@
             else if (percent >= 40) msg = 'Close to a coin flip. These models are fooling everyone.';
             else msg = '😅 Generative AI got the better of you this round.';
             el.resultMessage.textContent = msg;
+
+            // Populate reveal grid
+            const revealGrid = document.getElementById('revealGrid');
+            revealGrid.innerHTML = '';
+            for (const a of answers) {
+                const card = document.createElement('div');
+                card.className = 'reveal-card ' + (a.correct ? 'correct' : 'wrong');
+                const img = document.createElement('img');
+                img.src = IMAGE_DATA[a.index];
+                img.alt = a.isReal ? 'Real' : 'AI';
+                const badge = document.createElement('div');
+                badge.className = 'reveal-badge';
+                badge.textContent = a.isReal ? 'Real' : 'AI';
+                card.appendChild(img);
+                card.appendChild(badge);
+                revealGrid.appendChild(card);
+            }
 
             showScreen(el.resultsScreen);
 
