@@ -853,6 +853,10 @@
             showScreen(el.resultsScreen);
 
             try {
+                const COOLDOWN_MS = 60 * 1000; // 1 minute between submissions
+                const lastSubmit = parseInt(localStorage.getItem('lastSubmit') || '0', 10);
+                if (Date.now() - lastSubmit < COOLDOWN_MS) return;
+
                 await fetch(SHEETDB_API_URL, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
@@ -868,6 +872,7 @@
                         }]
                     })
                 });
+                localStorage.setItem('lastSubmit', Date.now().toString());
             } catch (e) {
                 // Network errors are silent — data may still save
             }
